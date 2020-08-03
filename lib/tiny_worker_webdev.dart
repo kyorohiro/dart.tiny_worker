@@ -14,7 +14,7 @@ import 'package:js/js_util.dart' as js_util;
 @pjs.JS('self')
 external dynamic get globalScopeSelf;
 void jsSendMessage(dynamic m) {
-  js.context.callMethod('postMessage',m);
+  js.context.callMethod('postMessage',[m]);
 }
 
 Stream<T> callbackToStream<J, T>(
