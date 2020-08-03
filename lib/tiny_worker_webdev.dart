@@ -1,10 +1,10 @@
+library tiny_worker_webdev;
+
 import 'dart:async';
-import 'dart:js';
+import 'dart:js' as js;
 
 import 'tiny_worker.dart' as base;
 import 'dart:html' as html;
-
-import 'dart:async';
 
 import 'package:js/js.dart' as pjs;
 import 'package:js/js_util.dart' as js_util;
@@ -14,14 +14,13 @@ import 'package:js/js_util.dart' as js_util;
 @pjs.JS('self')
 external dynamic get globalScopeSelf;
 void jsSendMessage(dynamic m) {
-  (globalScopeSelf as JsObject).callMethod("postMessage",m);
+  js.context.callMethod('postMessage',m);
 }
 
 Stream<T> callbackToStream<J, T>(
-    dynamic object, String name, T unwrapValue(J jsValue)) {
-  // ignore: close_sinks
-  StreamController<T> controller = new StreamController.broadcast(sync: true);
-  js_util.setProperty(object, name, allowInterop((J event) {
+    dynamic object, String name, T Function(J jsValue) unwrapValue) {
+  var controller = StreamController<T>.broadcast(sync: true);
+  js_util.setProperty(object, name, js.allowInterop((J event) {
     controller.add(unwrapValue(event));
   }));
   return controller.stream;
@@ -32,9 +31,8 @@ class Worker implements base.Worker {
   StreamController<dynamic> _outputController;
   Worker(){
     _outputController = StreamController();
-    callbackToStream(globalScopeSelf, "onmessage", (html.MessageEvent e)  {
-      print('worker: onMessage :: ${e.data}');
-      _outputController.add(js_util.getProperty(e, "data"));
+    callbackToStream(globalScopeSelf, 'onmessage', (html.MessageEvent e)  {
+      _outputController.add(js_util.getProperty(e, 'data'));
     });
   }
   @override
